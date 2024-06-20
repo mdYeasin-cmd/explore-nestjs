@@ -1,4 +1,24 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseBoolPipe,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
+import { CreatePropertyDto } from './dto/createProperty.dto';
+import { IdParam } from './dto/idParam.dto';
+import { ParseIdPipe } from './pipes/parseIdPipe';
+import { ZodValidationPipe } from './pipes/zodValidationPipe';
+import {
+  CreatePropertyZodDto,
+  createPropertySchema,
+} from './dto/createPropertyZod.dto';
 
 @Controller('property')
 export class PropertyController {
@@ -7,16 +27,37 @@ export class PropertyController {
     return 'All properties';
   }
 
-  @Get(':id/:slug')
-  findOne(@Param('id') id: string, @Param('slug') slug: string) {
+  @Get(':id')
+  findOne(
+    @Param('id', ParseIntPipe) id: string,
+    @Query('sort', ParseBoolPipe) sort: boolean,
+  ) {
+    console.log(typeof id);
+    console.log(typeof sort);
     return {
       id,
-      slug,
     };
   }
 
   @Post()
-  create(@Body() body) {
+  // @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  @UsePipes(new ZodValidationPipe(createPropertySchema))
+  create(
+    @Body()
+    body: CreatePropertyZodDto,
+  ) {
     return body;
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id', ParseIdPipe) id: number,
+    @Body()
+    body: CreatePropertyDto,
+  ) {
+    return {
+      id,
+      body,
+    };
   }
 }
